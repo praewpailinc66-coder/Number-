@@ -1,0 +1,137 @@
+<html>
+        <head><title>Downloaded HTML</title></head>
+        <body>
+            <pre style="white-space: pre-wrap; word-wrap: break-word;">import ipywidgets as widgets
+from IPython.display import display, HTML
+import random
+from collections import deque
+import time
+
+# Configuration and Custom Logic for Distribution
+HISTORY_SIZE = 10
+number_history = deque(maxlen=HISTORY_SIZE)
+
+# Queue to manage the specific distribution: 3(100k), 4(1M), 3(10M)
+pool = []
+
+def refill_pool():
+    global pool
+    hundred_thousands = [random.randint(100000, 999999) for _ in range(3)]
+    one_millions = [random.randint(1000000, 9999999) for _ in range(4)]
+    ten_millions = [random.randint(10000000, 99999999) for _ in range(3)]
+    pool = hundred_thousands + one_millions + ten_millions
+    random.shuffle(pool)
+
+refill_pool()
+
+setup_html = """
+<style>
+    .main-wrapper {
+        background-color: #fff0f5;
+        padding: 30px;
+        border-radius: 30px;
+        border: 5px solid #ffb6c1;
+        text-align: center;
+    }
+    .current-number {
+        font-size: 70px;
+        font-weight: bold;
+        color: #ff1493;
+        text-shadow: 3px 3px #ffe4e1;
+        margin: 25px 0;
+    }
+    .history-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 12px;
+        margin-top: 20px;
+    }
+    .history-item {
+        background: white;
+        border: 2px solid #ffc0cb;
+        border-radius: 15px;
+        padding: 10px;
+        font-size: 14px;
+        color: #db7093;
+    }
+    .btn-cute {
+        background-color: #ff69b4 !important;
+        color: white !important;
+        font-size: 18px !important;
+        font-weight: bold !important;
+        border-radius: 30px !important;
+        padding: 0px 30px !important;
+        height: 60px !important;
+        box-shadow: 0 4px #ff1493 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        line-height: normal !important;
+    }
+    .btn-reset {
+        background-color: #87ceeb !important;
+        color: white !important;
+        font-size: 18px !important;
+        font-weight: bold !important;
+        border-radius: 30px !important;
+        padding: 0px 30px !important;
+        height: 60px !important;
+        box-shadow: 0 4px #6a5acd !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        line-height: normal !important;
+    }
+</style>
+"""
+display(HTML(setup_html))
+
+current_num_html = widgets.HTML(value='<div class="current-number">000,000</div>')
+history_grid_html = widgets.HTML(value='')
+generate_button = widgets.Button(description="✨ START ✨")
+generate_button.add_class("btn-cute")
+reset_button = widgets.Button(description="🔄 RESET 🔄")
+reset_button.add_class("btn-reset")
+
+def update_ui():
+    current = number_history[0] if number_history else 0
+    current_num_html.value = f'<div class="current-number">{current:,}</div>'
+    round_count = len(number_history)
+    items_html = "".join([f'<div class="history-item">#{round_count-i}<br><b>{num:,}</b></div>' for i, num in enumerate(number_history)])
+    history_grid_html.value = f'<div class="history-grid">{items_html}</div>'
+
+def on_click(b):
+    global pool
+    if len(number_history) >= HISTORY_SIZE:
+        number_history.clear()
+    if not pool:
+        refill_pool()
+    new_number = pool.pop()
+    number_history.appendleft(new_number)
+    update_ui()
+
+def on_reset_click(b):
+    global pool
+    number_history.clear()
+    refill_pool()
+    update_ui()
+
+generate_button.on_click(on_click)
+reset_button.on_click(on_reset_click)
+
+ui_content = widgets.VBox([
+    widgets.HTML('<h1 style="color: #ff1493; margin-bottom: 20px;">🌸 สุ่มตัวเลข 🌸</h1>'),
+    widgets.Box([generate_button, reset_button], layout=widgets.Layout(justify_content='center', gap='10px', margin='10px 0')),
+    current_num_html,
+    widgets.HTML('<div style="height: 2px; background: #ffb6c1; margin: 20px 0;"></div>'),
+    widgets.HTML('<b style="color: #db7093; font-size: 16px;">ประวัติรอบปัจจุบัน:</b>'),
+    history_grid_html
+], layout=widgets.Layout(align_items='stretch'))
+
+main_container = widgets.Box([ui_content], layout=widgets.Layout(width='100%', justify_content='center'))
+main_container.add_class("main-wrapper")
+
+display(main_container)
+update_ui()</pre>
+        </body>
+    </html>
